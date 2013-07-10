@@ -15,6 +15,9 @@ package net.opentsdb.tsd;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.stumbleupon.async.Callback;
 import com.stumbleupon.async.Deferred;
 
@@ -28,6 +31,8 @@ import net.opentsdb.uid.NoSuchUniqueName;
 /** Implements the "put" telnet-style command. */
 final class PutDataPointRpc implements TelnetRpc {
 
+  private static final Logger LOG = LoggerFactory.getLogger(PutDataPointRpc.class);
+
   private static final AtomicLong requests = new AtomicLong();
   private static final AtomicLong hbase_errors = new AtomicLong();
   private static final AtomicLong invalid_values = new AtomicLong();
@@ -38,12 +43,28 @@ final class PutDataPointRpc implements TelnetRpc {
                                   final String[] cmd) {
     requests.incrementAndGet();
     String errmsg = null;
+    // join splitted put request for logging
+    StringBuilder builder = new StringBuilder();
+    builder.append(cmd[0]);
+    for(int i = 1; i < cmd.length; i++) {
+      builder.append(" ");
+      builder.append(cmd[i]);
+    }
+    final String put_request_str = builder.toString();
     try {
+      final class PutOKback implements Callback<Object, Object> {
+        public Object call(final Object arg) {
+          LOG.warn("Put datapoint OK. Data: " + put_request_str);
+          return arg;
+        }
+      }
       final class PutErrback implements Callback<Exception, Exception> {
         public Exception call(final Exception arg) {
+          String errmsg = "put: HBase error: " + arg.getMessage();
           if (chan.isConnected()) {
-            chan.write("put: HBase error: " + arg.getMessage() + '\n');
+            chan.write(errmsg + '\n');
           }
+          LOG.warn("Put datapoint failed. ErrorMsg: " + errmsg + ". Data: " + put_request_str);
           hbase_errors.incrementAndGet();
           return arg;
         }
@@ -51,19 +72,22 @@ final class PutDataPointRpc implements TelnetRpc {
           return "report error to channel";
         }
       }
-      return importDataPoint(tsdb, cmd).addErrback(new PutErrback());
+      return  importDataPoint(tsdb, cmd).addCallbacks(new PutOKback(), new PutErrback());
     } catch (NumberFormatException x) {
-      errmsg = "put: invalid value: " + x.getMessage() + '\n';
+      errmsg = "put: invalid value: " + x.getMessage();
       invalid_values.incrementAndGet();
     } catch (IllegalArgumentException x) {
-      errmsg = "put: illegal argument: " + x.getMessage() + '\n';
+      errmsg = "put: illegal argument: " + x.getMessage();
       illegal_arguments.incrementAndGet();
     } catch (NoSuchUniqueName x) {
-      errmsg = "put: unknown metric: " + x.getMessage() + '\n';
+      errmsg = "put: unknown metric: " + x.getMessage();
       unknown_metrics.incrementAndGet();
     }
     if (errmsg != null && chan.isConnected()) {
-      chan.write(errmsg);
+      chan.write(errmsg + '\n');
+    }
+    if (errmsg != null) {
+      LOG.warn("Put datapoint failed. ErrorMsg: " + errmsg + ". Data: " + put_request_str);
     }
     return Deferred.fromResult(null);
   }
