@@ -277,7 +277,7 @@ final class TsdbQuery implements Query {
       hbase_time += (System.nanoTime() - starttime) / 1000000;
       scanlatency.add(hbase_time);
     }
-    LOG.info(this + " matched " + nrows + " rows in " + spans.size() + " spans");
+    LOG.info(this + " matched " + nrows + " rows in " + spans.size() + " spans. hbase scan time: " + hbase_time + "ms");
     if (nrows == 0) {
       return null;
     }
