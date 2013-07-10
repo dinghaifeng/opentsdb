@@ -386,6 +386,8 @@ final class TsdbQuery implements Query {
     final Scanner scanner = tsdb.client.newScanner(tsdb.table);
     scanner.setStartKey(start_row);
     scanner.setStopKey(end_row);
+    // Leads to dramatic performance boost of hbase scans
+    scanner.setMaxNumRows(1024);
     if (tags.size() > 0 || group_bys != null) {
       createAndSetFilter(scanner);
     }
