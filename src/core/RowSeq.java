@@ -232,6 +232,10 @@ final class RowSeq implements DataPoints {
     return RowKey.metricName(tsdb, key);
   }
 
+  public String aggregatorName() {
+    return "";
+  }
+
   public Map<String, String> getTags() {
     return Tags.getTags(tsdb, key);
   }

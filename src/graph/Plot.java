@@ -310,7 +310,7 @@ public final class Plot {
       gp.write("plot ");
       for (int i = 0; i < nseries; i++) {
         final DataPoints dp = datapoints.get(i);
-        final String title = dp.metricName() + dp.getTags();
+        final String title = dp.aggregatorName() + ":" + dp.metricName() + dp.getTags();
         gp.append(" \"").append(datafiles[i]).append("\" using 1:2");
         if (smooth != null) {
           gp.append(" smooth ").append(smooth);

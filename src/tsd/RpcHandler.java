@@ -17,6 +17,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.Set;
+import java.util.Collections;
 
 import com.stumbleupon.async.Callback;
 import com.stumbleupon.async.Deferred;
@@ -319,7 +321,13 @@ final class RpcHandler extends SimpleChannelUpstreamHandler {
   /** The "/aggregators" endpoint. */
   private static final class ListAggregators implements HttpRpc {
     public void execute(final TSDB tsdb, final HttpQuery query) {
-      query.sendJsonArray(Aggregators.set());
+      Set<String> agg_set = Aggregators.set();
+      ArrayList<String> agg_list = new ArrayList<String>();
+      for(final String agg_name: agg_set) {
+        agg_list.add(agg_name);
+      }
+      Collections.sort(agg_list);
+      query.sendJsonArray(agg_list);
     }
   }
 

@@ -28,6 +28,11 @@ public interface DataPoints extends Iterable<DataPoint> {
   String metricName();
 
   /**
+   * Returns the aggregator name of the series.
+   */
+  String aggregatorName();
+
+  /**
    * Returns the tags associated with these data points.
    * @return A non-{@code null} map of tag names (keys), tag values (values).
    */

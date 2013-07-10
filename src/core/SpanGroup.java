@@ -176,6 +176,10 @@ final class SpanGroup implements DataPoints {
     return spans.isEmpty() ? "" : spans.get(0).metricName();
   }
 
+  public String aggregatorName() {
+    return aggregator.toString();
+  }
+
   public Map<String, String> getTags() {
     if (tags == null) {
       computeTags();

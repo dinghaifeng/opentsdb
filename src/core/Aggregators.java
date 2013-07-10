@@ -15,6 +15,8 @@ package net.opentsdb.core;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * Utility class that provides common, generally useful aggregators.
@@ -36,16 +38,23 @@ public final class Aggregators {
   /** Aggregator that returns the Standard Deviation of the data points. */
   public static final Aggregator DEV = new StdDev();
 
+  public static final Aggregator PCT90 = new Pct(90);
+  public static final Aggregator PCT95 = new Pct(95);
+  public static final Aggregator PCT99 = new Pct(99);
+
   /** Maps an aggregator name to its instance. */
   private static final HashMap<String, Aggregator> aggregators;
 
   static {
-    aggregators = new HashMap<String, Aggregator>(5);
+    aggregators = new HashMap<String, Aggregator>(8);
     aggregators.put("sum", SUM);
     aggregators.put("min", MIN);
     aggregators.put("max", MAX);
     aggregators.put("avg", AVG);
     aggregators.put("dev", DEV);
+    aggregators.put("pct-90", PCT90);
+    aggregators.put("pct-95", PCT95);
+    aggregators.put("pct-99", PCT99);
   }
 
   private Aggregators() {
@@ -182,6 +191,48 @@ public final class Aggregators {
     public String toString() {
       return "avg";
     }
+  }
+
+  public static final class Pct implements Aggregator {
+    public Pct(int threshold) {
+      this.threshold = threshold;
+      if(this.threshold < 0) {
+        this.threshold = 0;
+      } 
+      if(this.threshold >= 100) {
+        this.threshold = 99;
+      }
+    }
+
+    public long runLong(final Longs values) {
+      ArrayList<Long> all_values = new ArrayList<Long>();
+      int n = 0;
+      while (values.hasNextValue()) {
+        all_values.add(values.nextLongValue());
+        n++;
+      }
+      Collections.sort(all_values);
+      int threshold_index = (int)Math.floor((float)this.threshold / 100 * n);
+      return all_values.get(threshold_index);
+    }
+
+    public double runDouble(final Doubles values) {
+      ArrayList<Double> all_values = new ArrayList<Double>();
+      int n = 0;
+      while (values.hasNextValue()) {
+        all_values.add(values.nextDoubleValue());
+        n++;
+      }
+      Collections.sort(all_values);
+      int threshold_index = (int)Math.floor((float)this.threshold / 100 * n);
+      return all_values.get(threshold_index);
+    }
+
+    public String toString() {
+      return "pct-" + Integer.toString(this.threshold);
+    }
+
+    private int threshold;
   }
 
   /**

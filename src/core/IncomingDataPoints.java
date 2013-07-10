@@ -321,6 +321,10 @@ final class IncomingDataPoints implements WritableDataPoints {
     return tsdb.metrics.getName(id);
   }
 
+  public String aggregatorName() {
+    return "";
+  }
+
   public Map<String, String> getTags() {
     return Tags.getTags(tsdb, row);
   }

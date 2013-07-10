@@ -77,6 +77,21 @@ public final class TestAggregators {
     // 2886.7513315143719
     final double expected = 2886.7513315143719D;
     final double epsilon = 0.01;
+  public void testPctKnownValues() {
+    final long[] values = new long[10000];
+    for (int i = 0; i < values.length; i++) {
+      values[i] = i;
+    }
+    final Numbers numbers = new Numbers(values);
+    final Aggregator pct_90 = Aggregators.get("pct-90");
+    long expected_long = 8999;
+    Assert.assertEquals(expected_long, pct_90.runLong(numbers));
+    numbers.reset();
+    double expected_double = 8999.0;
+    Assert.assertEquals(expected_double, pct_90.runDouble(numbers), 0.1);
+  }
+
+  @Test
     checkSimilarStdDev(values, expected, epsilon);
   }
 
