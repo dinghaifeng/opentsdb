@@ -1,0 +1,7 @@
+#!/bin/bash
+TSD_LISTENING_PORT=8404
+MY_ARGS='--zkquorum=cq01-ps-zk02.cq01.baidu.com:40040,cq01-ps-zk01.cq01.baidu.com:40040,cq01-ps-zk03.cq01.baidu.com:40040 --table=tsdb-test --uidtable=tsdb-uid-test'
+set x $MY_ARGS "$@"
+shift
+
+
